@@ -1,0 +1,177 @@
+name: USA Number Generator
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # Generate setiap 30 menit
+  workflow_dispatch:          # Bisa manual trigger
+  push:
+    branches: [ main ]
+
+jobs:
+  generate-us-numbers:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Generate USA Numbers
+        run: |
+          python -c "
+import requests
+import json
+import random
+import re
+from datetime import datetime
+from bs4 import BeautifulSoup
+
+print('🇺🇸 Generating USA Numbers...')
+
+# ============= SOURCE 1: RECEIVE-SMS =============
+def get_from_receive_sms():
+    numbers = []
+    try:
+        url = 'https://receive-sms.com/'
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            text = soup.get_text()
+            matches = re.findall(r'(\+1\d{10})', text)
+            for match in matches[:15]:
+                numbers.append({
+                    'number': match,
+                    'source': 'receive-sms.com',
+                    'timestamp': datetime.now().isoformat(),
+                    'active': True
+                })
+    except:
+        pass
+    return numbers
+
+# ============= SOURCE 2: QUACKR.IO =============
+def get_from_quackr():
+    numbers = []
+    try:
+        url = 'https://quackr.io/us/'
+        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'}
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            for card in soup.find_all(['div', 'span'], class_=re.compile(r'number|card')):
+                text = card.get_text()
+                match = re.search(r'(\+1\d{10})', text)
+                if match:
+                    numbers.append({
+                        'number': match.group(1),
+                        'source': 'quackr.io',
+                        'timestamp': datetime.now().isoformat(),
+                        'active': True
+                    })
+    except:
+        pass
+    return numbers
+
+# ============= SOURCE 3: TEMP-NUMBERS =============
+def get_from_temp_numbers():
+    numbers = []
+    sources = [
+        'https://temp-number.com/us/',
+        'https://freesmscode.com/usa/',
+        'https://us-phone-number.com/'
+    ]
+    
+    for url in sources:
+        try:
+            headers = {'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)'}
+            resp = requests.get(url, headers=headers, timeout=10)
+            if resp.status_code == 200:
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                text = soup.get_text()
+                matches = re.findall(r'(\+1[0-9]{10})', text)
+                for match in matches[:10]:
+                    numbers.append({
+                        'number': match,
+                        'source': url.split('/')[2],
+                        'timestamp': datetime.now().isoformat(),
+                        'active': True
+                    })
+        except:
+            continue
+    return numbers
+
+# ============= GENERATE DUMMY =============
+def generate_dummy_usa(count=30):
+    numbers = []
+    area_codes = ['212', '213', '310', '312', '313', '404', '408', '415', '510', '516', '617', '619', '646', '650', '702', '703', '713', '714', '718', '720', '727', '732', '734', '740', '747', '754', '757', '760', '762', '763', '765', '769', '770', '772', '773', '774', '775', '779', '781', '785', '786', '787', '801', '802', '803', '804', '805', '806', '808', '809', '810', '812', '813', '814', '815', '816', '817', '818', '828', '830', '831', '832', '843', '845', '847', '848', '850', '856', '857', '858', '859', '860', '862', '863', '864', '865', '870', '872', '878', '901', '903', '904', '907', '908', '909', '910', '912', '913', '914', '915', '916', '917', '918', '919', '920', '925', '928', '929', '931', '936', '937', '940', '941', '947', '949', '951', '952', '954', '956', '959', '970', '971', '972', '973', '975', '978', '979', '980', '984', '985', '989']
+    
+    for _ in range(count):
+        area = random.choice(area_codes)
+        prefix = f"{random.randint(200,999):03d}"
+        line = f"{random.randint(1000,9999):04d}"
+        number = f"+1{area}{prefix}{line}"
+        
+        numbers.append({
+            'number': number,
+            'source': 'generator',
+            'timestamp': datetime.now().isoformat(),
+            'active': True
+        })
+    return numbers
+
+# ============= MAIN =============
+all_numbers = []
+
+print('📱 Scraping receive-sms.com...')
+all_numbers.extend(get_from_receive_sms())
+
+print('📱 Scraping quackr.io...')
+all_numbers.extend(get_from_quackr())
+
+print('📱 Scraping temp numbers...')
+all_numbers.extend(get_from_temp_numbers())
+
+print(f'✅ Found {len(all_numbers)} live numbers')
+
+if len(all_numbers) < 10:
+    print('⚠️ Too few numbers, adding dummy data...')
+    all_numbers.extend(generate_dummy_usa(50))
+
+# Remove duplicates
+seen = set()
+unique = []
+for num in all_numbers:
+    if num['number'] not in seen:
+        seen.add(num['number'])
+        unique.append(num)
+
+print(f'✅ Final: {len(unique)} unique USA numbers')
+
+# Save to file
+output = {
+    'last_updated': datetime.now().isoformat(),
+    'total': len(unique),
+    'country': 'USA',
+    'numbers': unique[:100]  # Max 100 numbers
+}
+
+with open('data/us-numbers.json', 'w') as f:
+    json.dump(output, f, indent=2)
+
+print('✅ Saved to data/us-numbers.json')
+"
+      
+      - name: Commit and Push
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/us-numbers.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "🤖 Auto-update USA numbers [skip ci]"
+          git push
