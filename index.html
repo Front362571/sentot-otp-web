@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENTOT OTP - USA Virtual Numbers</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <h1>🇺🇸 SENTOT<span>OTP</span></h1>
+                <div class="badge">LIVE</div>
+            </div>
+            <p class="subtitle">Free USA Virtual Numbers • Receive SMS Online • 100% Gratis</p>
+            <div class="status-bar">
+                <div class="status online">
+                    <span class="dot"></span>
+                    <span id="statusText">System Online</span>
+                </div>
+                <div class="update-time">
+                    <i class="far fa-clock"></i>
+                    <span id="lastUpdate">Loading...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📱</div>
+                <div class="stat-value" id="totalNumbers">0</div>
+                <div class="stat-label">Active Numbers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🇺🇸</div>
+                <div class="stat-value" id="areaCodes">50+</div>
+                <div class="stat-label">Area Codes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔄</div>
+                <div class="stat-value" id="updateFrequency">30m</div>
+                <div class="stat-label">Auto Update</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn primary" onclick="refreshNumbers()">
+                <i class="fas fa-sync-alt"></i> Refresh Numbers
+            </button>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search by number or area code..." onkeyup="filterNumbers()">
+            </div>
+        </div>
+
+        <!-- Numbers Grid -->
+        <div class="numbers-grid" id="numbersGrid">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i> Loading numbers...
+            </div>
+        </div>
+
+        <!-- SMS Modal -->
+        <div id="smsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-envelope"></i> SMS Monitor</h2>
+                    <span class="close" onclick="closeModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="number-display">
+                        <strong>Number:</strong>
+                        <span id="modalNumber"></span>
+                        <button class="copy-btn small" onclick="copyNumber(document.getElementById('modalNumber').textContent)">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="sms-box" id="smsMessages">
+                        <div class="sms-placeholder">
+                            <i class="far fa-comment-dots"></i>
+                            <p>Click "Start Monitoring" to check for SMS</p>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn primary" onclick="startMonitoring()">
+                            <i class="fas fa-play"></i> Start Monitoring
+                        </button>
+                        <button class="btn secondary" onclick="stopMonitoring()">
+                            <i class="fas fa-stop"></i> Stop
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
